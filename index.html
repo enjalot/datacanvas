@@ -1,0 +1,262 @@
+<html>
+<head>
+  <script src="https://derbyjs.github.io/derby-standalone/dist/0.6.0-alpha25/derby-standalone.min.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+    }
+    h1 {
+      width: 100%;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .post {
+      width: 100%;
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+    }
+    textarea {
+      font-family: Courier, monospace;
+      overflow-x: scroll;
+    }
+    .input {
+      border-bottom: 1px dashed orange;
+      cursor: pointer;
+      padding: 0 3px;
+    }
+    input.number {
+      font-size: 24px;
+      font-family: Courier;
+    }
+    select {
+      border: 0;
+    }
+    .op, .city, .resolution, .date, .format {
+      display: inline-block;
+      margin: 10px;
+    }
+    .url {
+      width: 100%;
+      margin: 5px;
+      padding: 2px;
+    }
+    .data {
+      width: 100%;
+      min-height: 200px;
+      margin: 5px;
+    }
+    .text, .results {
+      margin: 5px;
+    }
+    .aggregated {
+      width: 90%;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    .individual {
+      width: 90%;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    .count {
+      margin: 5px;
+      padding: 2px;
+    }
+    .icon-number-loader {
+      width: 100%;
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<!-- we create a template to use as the body -->
+<script type="text/template" id="body">
+
+<h1>DATA CANVAS API EXPLORER</h1>
+
+<view is="aggregated" 
+  cities="{{_page.cities}}" 
+  resolutions="{{_page.resolutions}}" 
+  formats="{{_page.formats}}"
+  ops="{{_page.ops}}"
+  dates="{{_page.dates}}">
+</view>
+
+<view is="individual"
+  cities="{{_page.cities}}" 
+  formats="{{_page.formats}}">
+</view>
+
+<div class="post">
+  <a href="http://map.datacanvas.org/#!/data">Data Canvas API</a> explorer built by <a href="https://twitter.com/enjalot">@enjalot</a> with <a href="http://derbyjs.com">DerbyJS</a>
+</div>
+
+</script>
+
+<script type="text/template" id="aggregated">
+  <div class="aggregated">
+    <span class="text"> 
+    Please give me the 
+    </span>
+
+    <span class="op">
+      <selectah 
+        value="{{op}}" 
+        editing="{{editing.ops}}"
+        options="{{ops}}">
+      </selectah>
+    </span>
+
+    of the data for 
+
+    <span class="city">
+      <selectah 
+        value="{{city}}" 
+        editing="{{editing.city}}"
+        options="{{cities}}">
+      </selectah>
+    </span>
+
+    every 
+
+    <span class="resolution">
+      <selectah 
+        value="{{resolution}}" 
+        editing="{{editing.resolution}}"
+        options="{{resolutions}}">
+      </selectah>
+    </span>
+
+    for the 
+
+    <span class="date">
+      <selectah 
+        value="{{selectedDate}}" 
+        editing="{{editing.selectedDate}}"
+        options="{{dates}}">
+      </selectah>
+    </span>
+
+    in
+
+    <div class="format">
+      <selectah 
+        value="{{format}}" 
+        editing="{{editing.format}}"
+        options="{{formats}}">
+      </selectah>
+    </div>
+
+    format
+
+    <input class="url" value="{{url}}">
+    {{if loading}}
+      <view is="loader"></view>
+    {{else}}
+      <textarea class="data" wrap="off">{{data}}</textarea>
+      <br>
+      <span class="results">
+        Got back {{results}} results.
+      </span>
+    {{/if}}
+
+  </div>
+
+</script>
+
+<script type="text/template" id="individual">
+  <div class="individual">
+    <span class="text"> 
+    Please give me 
+    <input value="{{count}}" class="count" size=3>
+    entries for 
+    </span>
+
+    <span class="sensor">
+      <selectah 
+        value="{{sensor}}" 
+        editing="{{editing.sensor}}"
+        options="{{sensors}}">
+      </selectah>
+    </span>
+
+    &nbsp; in the city of 
+
+    <span class="city">
+      <selectah 
+        value="{{city}}" 
+        editing="{{editing.city}}"
+        options="{{cities}}">
+      </selectah>
+    </span>
+
+    in
+
+    <div class="format">
+      <selectah 
+        value="{{format}}" 
+        editing="{{editing.format}}"
+        options="{{formats}}">
+      </selectah>
+    </div>
+
+    format
+
+    <input class="url" value="{{url}}">
+    {{if loading}}
+      <view is="loader"></view>
+    {{else}}
+      <textarea class="data" wrap="off">{{data}}</textarea>
+      <br>
+      <span class="results">
+        Got back {{results}} results.
+      </span>
+    {{/if}}
+
+  </div>
+
+</script>
+
+<script type="text/template" id="selectah" data-element="selectah">
+  <span on-key="key($event)">
+  {{if editing}}
+    <select as="select" on-change="selected()">
+      {{each options as #option}}
+      <option value={{#option}} selected="{{value == #option}}">{{#option}}</option>
+      {{/each}}
+    </select>
+  {{else}}
+    <span class="input" on-click="edit()">
+      {{value}}
+  </span>
+  {{/if}}
+  </span>
+</script>
+
+<script type="text/template" id="loader">
+<svg class="{{@class}} icon icon-number-loader" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 30 30" enable-background="new 0 0 30 30" xml:space="preserve">
+    <rect x="0" y="10" width="4" height="10" fill="#333" opacity="0.2">
+      <animate attributeName="opacity" attributeType="XML" values="0.2; 1; .2" begin="0s" dur="0.6s" repeatCount="indefinite" />
+      <animate attributeName="height" attributeType="XML" values="10; 20; 10" begin="0s" dur="0.6s" repeatCount="indefinite" />
+      <animate attributeName="y" attributeType="XML" values="10; 5; 10" begin="0s" dur="0.6s" repeatCount="indefinite" />
+    </rect>
+    <rect x="8" y="10" width="4" height="10" fill="#333"  opacity="0.2">
+      <animate attributeName="opacity" attributeType="XML" values="0.2; 1; .2" begin="0.15s" dur="0.6s" repeatCount="indefinite" />
+      <animate attributeName="height" attributeType="XML" values="10; 20; 10" begin="0.15s" dur="0.6s" repeatCount="indefinite" />
+      <animate attributeName="y" attributeType="XML" values="10; 5; 10" begin="0.15s" dur="0.6s" repeatCount="indefinite" />
+    </rect>
+    <rect x="16" y="10" width="4" height="10" fill="#333"  opacity="0.2">
+      <animate attributeName="opacity" attributeType="XML" values="0.2; 1; .2" begin="0.3s" dur="0.6s" repeatCount="indefinite" />
+      <animate attributeName="height" attributeType="XML" values="10; 20; 10" begin="0.3s" dur="0.6s" repeatCount="indefinite" />
+      <animate attributeName="y" attributeType="XML" values="10; 5; 10" begin="0.3s" dur="0.6s" repeatCount="indefinite" />
+    </rect>
+  </svg>
+</script>
+
+<body>
+</body>
+
+<script type="text/javascript" src="./sources.js"></script>
+<script type="text/javascript" src="./index.js"></script>
+</html>
